@@ -9,10 +9,17 @@ class Busquedas {
 
   get paramsMaxbox() {
     return {
-      access_token:
-        "pk.eyJ1Ijoiam9yZ2VhcmJlbGFleiIsImEiOiJjbDkzMG5rdzgwYjBhM3Vudjc5enRrNWZuIn0.9Ui2Lu_4WReDvMEKaRa0Xw",
+      access_token: process.env.MAPBOX_KEY,
+
       limit: 5,
       language: "es",
+    };
+  }
+  get paramsWeather() {
+    return {
+      appid: process.env.OPENWEATHER_KEY,
+      units: "metric",
+      lang: "es",
     };
   }
 
@@ -28,11 +35,43 @@ class Busquedas {
 
       const resp = await instance.get();
 
-      console.log(resp.data);
+      return resp.data.features.map((lugar) => ({
+        id: lugar.id,
+        nombre: lugar.place_name,
+        lng: lugar.center[0],
+        lat: lugar.center[1],
+      }));
 
       return []; // retornar los lugares
     } catch (error) {
       return [];
+    }
+  }
+
+  async climaLugar(lat, lon) {
+    try {
+      //instance axios.create
+      const instance = axios.create({
+        baseURL: `https://api.openweathermap.org/data/2.5/weather`,
+
+        params: { ...this.paramsWeather, lat, lon },
+      });
+
+      //resp
+      const resp = await instance.get();
+      const {
+        weather,
+        main: { temp_min, temp_max, temp },
+      } = resp.data;
+
+      return {
+        desc: weather[0].description,
+        min: temp_min,
+        max: temp_max,
+        temp: temp,
+      };
+    } catch (error) {
+      console.log(error);
     }
   }
 }
