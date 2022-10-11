@@ -1,10 +1,13 @@
+const fs = require("fs");
 const axios = require("axios");
 
 class Busquedas {
-  // historial = [Tegucigalpa];
+  historial = [];
+  dbPath = "./db/database.json";
 
   constructor() {
     // leer DB si existe
+    this.leerDB();
   }
 
   get paramsMaxbox() {
@@ -73,6 +76,34 @@ class Busquedas {
     } catch (error) {
       console.log(error);
     }
+  }
+  agregarHistorial(lugar) {
+    // sin duplicados
+
+    if (this.historial.includes(lugar.toLocaleLowerCase())) {
+      return;
+    }
+    this.historial.unshift(lugar.toLocaleLowerCase());
+
+    //grabar en DB
+    this.guardarDB();
+  }
+
+  guardarDB() {
+    const payload = {
+      historial: this.historial,
+    };
+
+    fs.writeFileSync(this.dbPath, JSON.stringify(payload));
+  }
+
+  leerDB() {
+    //debe de existir
+    if (!fs.existsSync(this.dbPath)) return;
+
+    const info = fs.readFileSync(this.dbPath, { encoding: "utf-8" });
+    const data = JSON.parse(info);
+    this.historial = data.historial;
   }
 }
 
